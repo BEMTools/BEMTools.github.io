@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BEM-Tools</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body class="fade-in page-home">
+
+    <!-- Loader -->
+    <div id="loader">
+        <div class="spinner"></div>
+    </div>
+
+    <div class="home-header">
+        <h>|| BEM-Tools || BEM GeoNav || ...als Hobbyprojekt ||</h>
+        <h1>BEM Tools</h1>
+        <h2>Geolokationen-Tool "BEM GeoNav"<br>-schnell & einfach Lokation finden!<br>-direkt in Maps öffnen und Nav. starten!</h2>
+    </div>
+
+    <div class="tools-grid">
+        <!-- BEM GeoNav Tool -->
+        <a href="geonav.html" class="tool-card">
+            <span class="tool-icon">🗺️</span>
+            <h3 class="tool-title">BEM GeoNav</h3>
+            <p class="tool-description">Exxon & Gasunie GPS Koordinaten<br>- Suchfunktion<br>- Listenansicht<br>- mit Kartenvorschau<br>- direkten Links zu Maps</p>
+        </a>
+
+        <!-- Platzhalter für zukünftige Tools -->
+        <div class="tool-card coming-soon">
+            <span class="coming-badge">Bald</span>
+            <span class="tool-icon">🔧</span>
+            <h3 class="tool-title">Tool 2</h3>
+            <p class="tool-description">Weitere Tools in Planung</p>
+        </div>
+    </div>
+
+    <div class="footer-text">
+        <p>&copy; 2026 BEM-Tools by C.Schulz</p>
+        <p>...für'n geschmeidigen Workflow</p>
+    </div>
+
+    <script>
+        window.onload = () => {
+            document.body.classList.add("loaded");
+        };
+    </script>
+
+</body>
+</html>
