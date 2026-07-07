@@ -1,6 +1,6 @@
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import Column, DateTime, Float, Integer, String, create_engine
 from sqlalchemy.orm import Session, declarative_base, sessionmaker
@@ -10,7 +10,7 @@ try:
 except Exception:
     # Fallback for environments where FastAPI/Pydantic imports in main.py are unavailable.
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    DB_PATH = os.path.join(BASE_DIR, "lokation_suche.db")
+    DB_PATH = os.path.join(BASE_DIR, "lokationen-db.db")
     DATABASE_URL = f"sqlite:///{DB_PATH}"
 
     engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
@@ -26,8 +26,8 @@ except Exception:
         kuerzel = Column(String, nullable=True)
         breite = Column(Float, nullable=False)
         laenge = Column(Float, nullable=False)
-        created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-        updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+        created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+        updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -76,8 +76,8 @@ def replace_dataset(db: Session, dataset: str, rows: list[dict]) -> int:
             kuerzel=(row.get("kuerzel") or "").strip() or None,
             breite=breite_value,
             laenge=laenge_value,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
         db.add(entry)
         inserted += 1

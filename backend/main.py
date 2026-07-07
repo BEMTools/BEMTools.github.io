@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import os
 from typing import Optional
 
@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "lokation_suche.db")
+DB_PATH = os.path.join(BASE_DIR, "lokationen-db.db")
 DATABASE_URL = f"sqlite:///{DB_PATH}"
 
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
@@ -43,7 +43,7 @@ class AdminUser(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
 
 class LocationEntry(Base):
@@ -55,8 +55,8 @@ class LocationEntry(Base):
     kuerzel = Column(String, nullable=True)
     breite = Column(Float, nullable=False)
     laenge = Column(Float, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
 
 class ExtraAddressEntry(Base):
@@ -71,8 +71,8 @@ class ExtraAddressEntry(Base):
     notes = Column(String, nullable=True)
     creator_name = Column(String, nullable=False)
     location_method = Column(String, nullable=False, default="address")
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
 
 class LoginIn(BaseModel):
@@ -162,7 +162,7 @@ def hash_password(password: str) -> str:
 
 
 def create_access_token(subject: str) -> str:
-    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode = {"sub": subject, "exp": expire}
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
@@ -305,7 +305,7 @@ def create_extra_address(payload: ExtraAddressCreate, db: Session = Depends(get_
         notes=(payload.notes or "").strip() or None,
         creator_name=payload.creator_name.strip(),
         location_method=payload.location_method,
-        updated_at=datetime.utcnow(),
+        updated_at=datetime.now(timezone.utc),
     )
     db.add(entry)
     db.commit()
@@ -343,7 +343,7 @@ def create_entry(
         kuerzel=(payload.kuerzel or "").strip() or None,
         breite=payload.breite,
         laenge=payload.laenge,
-        updated_at=datetime.utcnow(),
+        updated_at=datetime.now(timezone.utc),
     )
     db.add(item)
     db.commit()
@@ -380,7 +380,7 @@ def update_entry(
     if payload.laenge is not None:
         item.laenge = payload.laenge
 
-    item.updated_at = datetime.utcnow()
+    item.updated_at = datetime.now(timezone.utc)
     db.add(item)
     db.commit()
     db.refresh(item)

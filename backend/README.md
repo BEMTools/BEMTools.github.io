@@ -5,7 +5,7 @@ Uebersicht
   - empg_bohrungen
   - empg_schieber
   - gasunie_schieber
-- SQLite Datenbankdatei: lokation_suche.db
+- SQLite Datenbankdatei: lokationen-db.db
 - JWT Admin Login fuer Create/Update/Delete
 - Einmaliger JSON Import mit import_json_to_db.py
 
