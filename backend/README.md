@@ -13,7 +13,7 @@ Dateien
 - main.py: API Server
 - import_json_to_db.py: JSON -> Datenbank Migration
 - requirements.txt: Python Abhaengigkeiten
-
+2
 Schnellstart
 1) Virtualenv erstellen und Pakete installieren
 - python -m venv .venv
