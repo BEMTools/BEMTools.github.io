@@ -59,6 +59,22 @@ class LocationEntry(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
 
+class ExtraAddressEntry(Base):
+    __tablename__ = "extra_address_entries"
+
+    id = Column(Integer, primary_key=True, index=True)
+    theme = Column(String, nullable=False)
+    name = Column(String, nullable=False)
+    address = Column(String, nullable=True)
+    lat = Column(Float, nullable=False)
+    lng = Column(Float, nullable=False)
+    notes = Column(String, nullable=True)
+    creator_name = Column(String, nullable=False)
+    location_method = Column(String, nullable=False, default="address")
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+
 class LoginIn(BaseModel):
     username: str
     password: str
@@ -90,6 +106,31 @@ class EntryOut(BaseModel):
     kuerzel: Optional[str]
     breite: float
     laenge: float
+    updated_at: datetime
+
+
+class ExtraAddressCreate(BaseModel):
+    theme: str = Field(min_length=1)
+    name: str = Field(min_length=1)
+    address: Optional[str] = None
+    lat: float
+    lng: float
+    notes: Optional[str] = None
+    creator_name: str = Field(min_length=1)
+    location_method: str = "address"
+
+
+class ExtraAddressOut(BaseModel):
+    id: int
+    theme: str
+    name: str
+    address: Optional[str]
+    lat: float
+    lng: float
+    notes: Optional[str]
+    creator_name: str
+    location_method: str
+    created_at: datetime
     updated_at: datetime
 
 
@@ -173,6 +214,22 @@ def serialize_entry(entry: LocationEntry) -> dict:
     }
 
 
+def serialize_extra_address(entry: ExtraAddressEntry) -> dict:
+    return {
+        "id": entry.id,
+        "theme": entry.theme,
+        "name": entry.name,
+        "address": entry.address,
+        "lat": entry.lat,
+        "lng": entry.lng,
+        "notes": entry.notes,
+        "creator_name": entry.creator_name,
+        "location_method": entry.location_method,
+        "created_at": entry.created_at,
+        "updated_at": entry.updated_at,
+    }
+
+
 def ensure_bootstrap_admin(db: Session) -> None:
     existing = db.query(AdminUser).filter(AdminUser.username == ADMIN_BOOTSTRAP_USER).first()
     if existing:
@@ -217,6 +274,43 @@ def login(payload: LoginIn, db: Session = Depends(get_db)) -> TokenOut:
 @app.get("/datasets")
 def list_datasets() -> dict:
     return {"datasets": sorted(ALLOWED_DATASETS)}
+
+
+@app.get("/api/extra-addresses", response_model=list[ExtraAddressOut])
+@app.get("/extra-addresses", response_model=list[ExtraAddressOut])
+def list_extra_addresses(db: Session = Depends(get_db)) -> list[ExtraAddressOut]:
+    rows = (
+        db.query(ExtraAddressEntry)
+        .order_by(ExtraAddressEntry.theme.asc(), ExtraAddressEntry.name.asc(), ExtraAddressEntry.id.asc())
+        .all()
+    )
+    return [serialize_extra_address(row) for row in rows]
+
+
+@app.post("/api/extra-addresses", response_model=ExtraAddressOut, status_code=201)
+@app.post("/extra-addresses", response_model=ExtraAddressOut, status_code=201)
+def create_extra_address(payload: ExtraAddressCreate, db: Session = Depends(get_db)) -> ExtraAddressOut:
+    if payload.location_method not in {"address", "gps"}:
+        raise HTTPException(status_code=400, detail="location_method must be 'address' or 'gps'")
+
+    if not payload.address and payload.location_method == "address":
+        raise HTTPException(status_code=400, detail="Address is required when location_method is 'address'")
+
+    entry = ExtraAddressEntry(
+        theme=payload.theme.strip(),
+        name=payload.name.strip(),
+        address=(payload.address or "").strip() or None,
+        lat=payload.lat,
+        lng=payload.lng,
+        notes=(payload.notes or "").strip() or None,
+        creator_name=payload.creator_name.strip(),
+        location_method=payload.location_method,
+        updated_at=datetime.utcnow(),
+    )
+    db.add(entry)
+    db.commit()
+    db.refresh(entry)
+    return serialize_extra_address(entry)
 
 
 @app.get("/api/entries/{dataset}", response_model=list[EntryOut])

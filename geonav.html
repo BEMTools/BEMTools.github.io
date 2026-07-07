@@ -41,51 +41,94 @@
         <div class="extra-addresses-card">
             <div class="admin-header">
                 <h3 class="admin-title">Weitere Adressen</h3>
-                <button type="button" class="admin-close" id="closeExtraAddressesBtn">Schließen</button>
+                <div class="header-actions">
+                    <button type="button" class="admin-small-btn" id="startNewExtraAddressBtn">Neuen Eintrag anlegen</button>
+                    <button type="button" class="admin-close" id="closeExtraAddressesBtn">Schließen</button>
+                </div>
             </div>
 
-            <form class="extra-addresses-form" id="extraAddressesForm">
-                <div class="form-row">
-                    <label>
-                        <span>Thema</span>
-                        <select id="addressTheme" name="theme" required>
-                            <option value="Werkstatt">Werkstatt</option>
-                            <option value="Lager">Lager</option>
-                            <option value="Kundentermine">Kundentermine</option>
-                            <option value="Fremdplatz">Fremdplatz</option>
-                            <option value="Sonstiges">Sonstiges</option>
-                        </select>
-                    </label>
-                    <label>
-                        <span>Name / Bezeichnung</span>
-                        <input type="text" id="addressName" name="name" placeholder="z. B. Werk 3" required>
-                    </label>
-                </div>
+            <p class="extra-addresses-help">Alle Einträge werden dauerhaft in der Server-Datenbank gespeichert. Neue Einträge werden Schritt für Schritt angelegt.</p>
 
-                <label>
-                    <span>Adresse</span>
-                    <input type="text" id="addressText" name="address" placeholder="Straße, Ort, Hausnummer" required>
-                </label>
+            <section class="extra-addresses-wizard" id="extraAddressesWizard" hidden>
+                <form class="extra-addresses-form" id="extraAddressesForm">
+                    <div class="wizard-step" id="wizardStepLocation" data-step="1">
+                        <h4>1. Art der Ortsangabe</h4>
+                        <div class="wizard-options">
+                            <label class="wizard-option">
+                                <input type="radio" name="locationMode" value="address" checked>
+                                <span>Adresse verwenden</span>
+                            </label>
+                            <label class="wizard-option">
+                                <input type="radio" name="locationMode" value="gps">
+                                <span>GPS-Koordinaten verwenden</span>
+                            </label>
+                        </div>
+                    </div>
 
-                <div class="form-row">
-                    <label>
-                        <span>Breitengrad</span>
-                        <input type="number" id="addressLat" name="lat" step="any" required>
-                    </label>
-                    <label>
-                        <span>Längengrad</span>
-                        <input type="number" id="addressLng" name="lng" step="any" required>
-                    </label>
-                </div>
+                    <div class="wizard-step" id="wizardStepCreator" data-step="2" hidden>
+                        <h4>2. Ersteller</h4>
+                        <label>
+                            <span>Wie heißt der Ersteller?</span>
+                            <input type="text" id="extraCreatorName" name="creator_name" placeholder="z. B. Max Mustermann" required>
+                        </label>
+                    </div>
 
-                <label>
-                    <span>Hinweis</span>
-                    <textarea id="addressNotes" name="notes" rows="3" placeholder="Kurzinfo oder Kontakt"></textarea>
-                </label>
+                    <div class="wizard-step" id="wizardStepCoordinates" data-step="3" hidden>
+                        <h4>3. Ortsdaten</h4>
+                        <div id="wizardAddressFields">
+                            <label>
+                                <span>Adresse</span>
+                                <input type="text" id="extraAddressText" name="address" placeholder="Straße, Ort, Hausnummer">
+                            </label>
+                        </div>
+                        <div id="wizardGpsFields" hidden>
+                            <div class="form-row">
+                                <label>
+                                    <span>Breitengrad</span>
+                                    <input type="number" id="extraLat" name="lat" step="any" placeholder="51.123456">
+                                </label>
+                                <label>
+                                    <span>Längengrad</span>
+                                    <input type="number" id="extraLng" name="lng" step="any" placeholder="7.123456">
+                                </label>
+                            </div>
+                        </div>
+                    </div>
 
-                <div id="addressStatus" class="address-status" role="status" aria-live="polite"></div>
-                <button type="submit" class="btn">Adresse speichern</button>
-            </form>
+                    <div class="wizard-step" id="wizardStepDetails" data-step="4" hidden>
+                        <h4>4. Weitere Details</h4>
+                        <div class="form-row">
+                            <label>
+                                <span>Thema</span>
+                                <select id="extraTheme" name="theme" required>
+                                    <option value="Werkstatt">Werkstatt</option>
+                                    <option value="Lager">Lager</option>
+                                    <option value="Kundentermine">Kundentermine</option>
+                                    <option value="Fremdplatz">Fremdplatz</option>
+                                    <option value="Sonstiges">Sonstiges</option>
+                                </select>
+                            </label>
+                            <label>
+                                <span>Name / Bezeichnung</span>
+                                <input type="text" id="extraName" name="name" placeholder="z. B. Werk 3" required>
+                            </label>
+                        </div>
+
+                        <label>
+                            <span>Hinweis</span>
+                            <textarea id="extraNotes" name="notes" rows="3" placeholder="Kurzinfo oder Kontakt"></textarea>
+                        </label>
+                    </div>
+
+                    <div id="addressStatus" class="address-status" role="status" aria-live="polite"></div>
+
+                    <div class="wizard-actions">
+                        <button type="button" class="btn secondary" id="wizardBackBtn">Zurück</button>
+                        <button type="button" class="btn" id="wizardNextBtn">Weiter</button>
+                        <button type="submit" class="btn" id="wizardSubmitBtn" hidden>Eintrag speichern</button>
+                    </div>
+                </form>
+            </section>
 
             <div class="extra-addresses-list" id="extraAddressesList"></div>
         </div>
@@ -178,16 +221,23 @@
         const openExtraAddressesBtn = document.getElementById("openExtraAddressesBtn");
         const extraAddressesModal = document.getElementById("extraAddressesModal");
         const closeExtraAddressesBtn = document.getElementById("closeExtraAddressesBtn");
+        const startNewExtraAddressBtn = document.getElementById("startNewExtraAddressBtn");
+        const extraAddressesWizard = document.getElementById("extraAddressesWizard");
         const extraAddressesForm = document.getElementById("extraAddressesForm");
         const extraAddressesList = document.getElementById("extraAddressesList");
-        const addressTheme = document.getElementById("addressTheme");
-        const addressName = document.getElementById("addressName");
-        const addressText = document.getElementById("addressText");
-        const addressLat = document.getElementById("addressLat");
-        const addressLng = document.getElementById("addressLng");
-        const addressNotes = document.getElementById("addressNotes");
+        const extraTheme = document.getElementById("extraTheme");
+        const extraName = document.getElementById("extraName");
+        const extraAddressText = document.getElementById("extraAddressText");
+        const extraLat = document.getElementById("extraLat");
+        const extraLng = document.getElementById("extraLng");
+        const extraNotes = document.getElementById("extraNotes");
+        const extraCreatorName = document.getElementById("extraCreatorName");
         const addressStatus = document.getElementById("addressStatus");
-        const EXTRA_ADDRESSES_KEY = "bemtools_extra_addresses";
+        const wizardBackBtn = document.getElementById("wizardBackBtn");
+        const wizardNextBtn = document.getElementById("wizardNextBtn");
+        const wizardSubmitBtn = document.getElementById("wizardSubmitBtn");
+        const wizardAddressFields = document.getElementById("wizardAddressFields");
+        const wizardGpsFields = document.getElementById("wizardGpsFields");
         const adminLoginBox = document.getElementById("adminLoginBox");
         const adminPanel = document.getElementById("adminPanel");
         const adminUser = document.getElementById("adminUser");
@@ -207,19 +257,19 @@
         let adminToken = localStorage.getItem(AUTH_TOKEN_KEY) || "";
         let adminAuthenticated = Boolean(adminToken);
         let selectedDataset = datasetSelect.value || "empg_bohrungen";
-        let extraAddresses = loadExtraAddresses();
+        let extraAddresses = [];
+        let extraAddressStep = 1;
 
-        function loadExtraAddresses() {
+        async function loadExtraAddresses() {
             try {
-                const stored = JSON.parse(localStorage.getItem(EXTRA_ADDRESSES_KEY) || "[]");
-                return Array.isArray(stored) ? stored : [];
+                const data = await apiRequest("/extra-addresses");
+                extraAddresses = Array.isArray(data) ? data : [];
+                renderExtraAddresses();
             } catch (error) {
-                return [];
+                extraAddresses = [];
+                renderExtraAddresses();
+                setAddressStatus("Die zusätzlichen Adressen konnten nicht vom Server geladen werden: " + error.message, true);
             }
-        }
-
-        function saveExtraAddresses() {
-            localStorage.setItem(EXTRA_ADDRESSES_KEY, JSON.stringify(extraAddresses));
         }
 
         function renderExtraAddresses() {
@@ -270,12 +320,15 @@
         function openExtraAddressesModal() {
             extraAddressesModal.classList.add("open");
             extraAddressesModal.setAttribute("aria-hidden", "false");
-            renderExtraAddresses();
+            hideExtraAddressWizard();
+            loadExtraAddresses();
         }
 
         function closeExtraAddressesModal() {
             extraAddressesModal.classList.remove("open");
             extraAddressesModal.setAttribute("aria-hidden", "true");
+            hideExtraAddressWizard();
+            setAddressStatus("");
         }
 
         function setAddressStatus(message, isError = false) {
@@ -285,6 +338,85 @@
 
             addressStatus.textContent = message;
             addressStatus.style.color = isError ? "#f7a7a7" : "#8edc92";
+        }
+
+        function updateExtraAddressWizardView() {
+            const steps = Array.from(document.querySelectorAll(".wizard-step"));
+            steps.forEach(step => {
+                const stepNumber = Number(step.dataset.step || 1);
+                step.hidden = stepNumber !== extraAddressStep;
+            });
+
+            const locationMode = document.querySelector('input[name="locationMode"]:checked')?.value || "address";
+            wizardAddressFields.hidden = locationMode !== "address";
+            wizardGpsFields.hidden = locationMode !== "gps";
+
+            wizardBackBtn.hidden = extraAddressStep === 1;
+            wizardNextBtn.hidden = extraAddressStep === 4;
+            wizardSubmitBtn.hidden = extraAddressStep !== 4;
+        }
+
+        function resetExtraAddressWizard() {
+            extraAddressesForm.reset();
+            extraAddressStep = 1;
+            const defaultMode = document.querySelector('input[name="locationMode"][value="address"]');
+            if (defaultMode) {
+                defaultMode.checked = true;
+            }
+            updateExtraAddressWizardView();
+            setAddressStatus("");
+        }
+
+        function showExtraAddressWizard() {
+            extraAddressesWizard.hidden = false;
+            resetExtraAddressWizard();
+            extraCreatorName.focus();
+        }
+
+        function hideExtraAddressWizard() {
+            extraAddressesWizard.hidden = true;
+            setAddressStatus("");
+        }
+
+        function goToNextExtraAddressStep() {
+            if (extraAddressStep === 2 && !extraCreatorName.value.trim()) {
+                setAddressStatus("Bitte den Namen des Erstellers eingeben.", true);
+                return;
+            }
+
+            if (extraAddressStep === 3) {
+                const locationMode = document.querySelector('input[name="locationMode"]:checked')?.value || "address";
+                if (locationMode === "address") {
+                    if (!extraAddressText.value.trim()) {
+                        setAddressStatus("Bitte eine Adresse eingeben.", true);
+                        return;
+                    }
+                } else {
+                    const lat = Number.parseFloat(extraLat.value);
+                    const lng = Number.parseFloat(extraLng.value);
+                    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+                        setAddressStatus("Bitte gültige GPS-Koordinaten eingeben.", true);
+                        return;
+                    }
+                }
+            }
+
+            if (extraAddressStep === 4) {
+                if (!extraTheme.value.trim() || !extraName.value.trim()) {
+                    setAddressStatus("Bitte Thema und Bezeichnung ausfüllen.", true);
+                    return;
+                }
+            }
+
+            setAddressStatus("");
+            extraAddressStep = Math.min(4, extraAddressStep + 1);
+            updateExtraAddressWizardView();
+        }
+
+        function goToPreviousExtraAddressStep() {
+            extraAddressStep = Math.max(1, extraAddressStep - 1);
+            updateExtraAddressWizardView();
+            setAddressStatus("");
         }
 
         async function geocodeAddress(address) {
@@ -624,6 +756,7 @@
 
         openExtraAddressesBtn.addEventListener("click", openExtraAddressesModal);
         closeExtraAddressesBtn.addEventListener("click", closeExtraAddressesModal);
+        startNewExtraAddressBtn.addEventListener("click", showExtraAddressWizard);
 
         extraAddressesModal.addEventListener("click", event => {
             if (event.target === extraAddressesModal) {
@@ -631,37 +764,82 @@
             }
         });
 
+        wizardBackBtn.addEventListener("click", goToPreviousExtraAddressStep);
+        wizardNextBtn.addEventListener("click", goToNextExtraAddressStep);
+        document.querySelectorAll('input[name="locationMode"]').forEach(radio => {
+            radio.addEventListener("change", updateExtraAddressWizardView);
+        });
+
         extraAddressesForm.addEventListener("submit", async event => {
             event.preventDefault();
 
-            const theme = addressTheme.value.trim();
-            const name = addressName.value.trim();
-            const address = addressText.value.trim();
-            const notes = addressNotes.value.trim();
+            const locationMode = document.querySelector('input[name="locationMode"]:checked')?.value || "address";
+            const theme = extraTheme.value.trim();
+            const name = extraName.value.trim();
+            const creatorName = extraCreatorName.value.trim();
+            const notes = extraNotes.value.trim();
 
-            if (!theme || !name || !address) {
-                setAddressStatus("Bitte Thema, Name und Adresse ausfüllen.", true);
+            if (!theme || !name || !creatorName) {
+                setAddressStatus("Bitte Thema, Bezeichnung und Ersteller ausfüllen.", true);
                 return;
             }
 
-            setAddressStatus("Koordinaten werden ermittelt…", false);
-
             try {
-                const coords = await geocodeAddress(address);
-                const lat = coords.lat;
-                const lng = coords.lng;
+                let lat = 0;
+                let lng = 0;
+                let address = "";
 
-                extraAddresses.push({ theme, name, address, lat, lng, notes });
-                saveExtraAddresses();
+                if (locationMode === "address") {
+                    address = extraAddressText.value.trim();
+                    if (!address) {
+                        throw new Error("Bitte eine Adresse eingeben.");
+                    }
+
+                    setAddressStatus("Koordinaten werden ermittelt…", false);
+                    const coords = await geocodeAddress(address);
+                    lat = coords.lat;
+                    lng = coords.lng;
+                } else {
+                    lat = Number.parseFloat(extraLat.value);
+                    lng = Number.parseFloat(extraLng.value);
+                    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+                        throw new Error("Bitte gültige GPS-Koordinaten eingeben.");
+                    }
+                }
+
+                const response = await fetch(apiUrl("/extra-addresses"), {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        theme,
+                        name,
+                        address: locationMode === "address" ? address : null,
+                        lat,
+                        lng,
+                        notes,
+                        creator_name: creatorName,
+                        location_method: locationMode
+                    })
+                });
+
+                if (!response.ok) {
+                    let message = "Eintrag konnte nicht gespeichert werden.";
+                    try {
+                        const payload = await response.json();
+                        message = payload.detail || payload.message || message;
+                    } catch (error) {
+                        // Keep fallback message.
+                    }
+                    throw new Error(message);
+                }
+
+                const createdEntry = await response.json();
+                extraAddresses.unshift(createdEntry);
                 renderExtraAddresses();
-
-                addressLat.value = lat.toFixed(6);
-                addressLng.value = lng.toFixed(6);
-                setAddressStatus("Koordinaten wurden automatisch übernommen.", false);
-
-                extraAddressesForm.reset();
-                addressTheme.value = "Werkstatt";
-                addressName.focus();
+                hideExtraAddressWizard();
+                setAddressStatus("Eintrag wurde in der Datenbank gespeichert.", false);
             } catch (error) {
                 setAddressStatus(error.message, true);
             }
