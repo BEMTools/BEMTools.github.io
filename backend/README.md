@@ -69,10 +69,49 @@ example.de {
 
 Wenn dein Frontend auf anderer Domain liegt, CORS in main.py einschranken und dort nur diese Domain erlauben.
 
+Apache2 Einbindung
+- Das Frontend wird jetzt statisch mit Apache2 bereitgestellt.
+- Apache kann `DocumentRoot /var/www/html` nutzen und Anfragen an `/api` an das lokale Backend weiterleiten.
+- Falls ein Reverse-Proxy gewünscht ist, aktiviere `ssl`, `proxy` und `proxy_http`.
+
+Beispiel-Bemtools Apache-Konfiguration
+```apache
+<VirtualHost *:80>
+    ServerName bemtools.de
+    ServerAlias www.bemtools.de
+
+    DocumentRoot /var/www/html
+    <Directory "/var/www/html">
+        AllowOverride None
+        Require all granted
+    </Directory>
+
+    Redirect permanent / https://bemtools.de
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName bemtools.de
+    ServerAlias www.bemtools.de
+
+    DocumentRoot /var/www/html
+
+    SSLEngine on
+    SSLCertificateFile    /home/csx/BEM-Tools/backend/cert/pem.crt
+    SSLCertificateKeyFile /home/csx/BEM-Tools/backend/cert/private.key
+</VirtualHost>
+```
+
+Falls Apache `/api` weiterleiten soll, kannst du folgende Zeilen aktivieren:
+```apache
+    ProxyPreserveHost On
+    ProxyPass /api http://127.0.0.1:8010
+    ProxyPassReverse /api http://127.0.0.1:8010
+```
+
 Empfohlener Betrieb als Dienst
-- Starte uvicorn ueber systemd oder NSSM/Task Scheduler (je nach Server OS).
-- Port 8010 nur lokal binden (127.0.0.1), nicht direkt ins Internet.
-- TLS komplett in Caddy terminieren.
+- Starte uvicorn über systemd oder Task Scheduler (je nach Server OS).
+- Port 8010 nur lokal binden (`127.0.0.1`), nicht direkt ins Internet.
+- TLS wird vom Apache-Host terminiert.
 
 JSON zu DB Umstellung (empfohlener Ablauf)
 1) Backup der drei JSON Dateien erstellen.

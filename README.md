@@ -42,35 +42,68 @@ Das Backend liefert:
    - `python import_json_to_db.py`
 5. Backend starten:
    - `uvicorn main:app --host 127.0.0.1 --port 8010`
-6. Statische Dateien mit Caddy ausliefern (siehe `Caddyfile`).
+6. Statische Dateien mit Apache2 ausliefern.
 
-## Caddy-Konfiguration
+## Apache2-Konfiguration
 
-Erstelle die Datei `Caddyfile` im Projektstamm mit der Domain `chriss97st.ddns.net`.
+Erstelle die Datei `bemtools.conf` für die neue Domain `bemtools.de` und verwende folgenden Inhalt:
 
-```caddy
-chriss97st.ddns.net {
-    root * /var/www/BEM-Tools
-    encode gzip
+```apache
+<VirtualHost *:80>
+    ServerName bemtools.de
+    ServerAlias www.bemtools.de
 
-    handle_path /api/* {
-        reverse_proxy 127.0.0.1:8010
-    }
+    # 1. Pfad zum Frontend (Statische Dateien)
+    DocumentRoot /var/www/html
+#    DirectoryIndex index.html
+    <Directory "/var/www/html">
+        AllowOverride None
+        Require all granted
+    </Directory>
 
-    file_server
-}
+    Redirect permanent / https://bemtools.de
+    # 2. Reverse Proxy für das Python-Backend
+    # Alle Anfragen an /api werden intern an Port 8000 weitergeleitet
+#    ProxyPreserveHost On
+#    ProxyPass /api http://127.0.0
+#    ProxyPassReverse /api http://127.0.0
+
+#    ErrorLog ${APACHE_LOG_DIR}/meinprojekt_error.log
+#    CustomLog ${APACHE_LOG_DIR}/meinprojekt_access.log combined
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName bemtools.de
+    ServerAlias www.bemtools.de
+
+    DocumentRoot /var/www/html
+
+    #  SSL Engine Switch:
+    #   Enable/Disable SSL for this virtual host.
+    SSLEngine on
+    SSLCertificateFile    /home/csx/BEM-Tools/backend/cert/pem.crt
+    SSLCertificateKeyFile /home/csx/BEM-Tools/backend/cert/private.key
+    #SSLCertificateChainFile /etc/ssl/certs/gd_bundle.crt
+</VirtualHost>
 ```
 
-Passe den Pfad `/var/www/BEM-Tools` an den tatsächlichen Speicherort der Projektdateien an.
+Passe bei Bedarf die Pfade zu `DocumentRoot` und zu den SSL-Zertifikatsdateien an.
 
-> Wenn Caddy auf demselben Server läuft wie das Backend, muss das Backend nur lokal erreichbar sein. TLS wird von Caddy automatisch terminiert.
+> Caddy wird nicht mehr verwendet. Das statische Frontend wird jetzt mit Apache2 ausgeliefert.
 
 ## Deployment
 
-1. Stelle sicher, dass Caddy auf dem Server läuft.
-2. Setze die Domain `chriss97st.ddns.net` auf die Server-IP.
-3. Starte das Backend auf `127.0.0.1:8010`.
-4. Öffne `https://chriss97st.ddns.net` im Browser.
+1. Installiere Apache2 und aktiviere ggf. die benötigten Module:
+   - `a2enmod ssl`
+   - `a2enmod proxy`
+   - `a2enmod proxy_http`
+2. Lege die Konfigurationsdatei `/etc/apache2/sites-available/bemtools.conf` an.
+3. Aktiviere die Site:
+   - `sudo a2ensite bemtools.conf`
+4. Lade Apache neu:
+   - `sudo systemctl reload apache2`
+5. Stelle sicher, dass die Domain `bemtools.de` auf die Server-IP zeigt.
+6. Öffne `https://bemtools.de` im Browser.
 
 ## Adminzugang
 
