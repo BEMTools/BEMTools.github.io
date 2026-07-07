@@ -24,10 +24,71 @@
 
 
     <div class="button-container">
-        <a class="btn" href="suche.html?dataset=empg_bohrungen">EMPG Bohrungen</a>
-        <a class="btn" href="suche.html?dataset=empg_schieber">EMPG Schieber</a>
-        <a class="btn" href="suche.html?dataset=gasunie_schieber">Gasunie Schieber</a>
+        <div class="menu-stack">
+            <button type="button" class="btn" id="toggleLocationsMenu">Lokationen</button>
+            <div class="location-menu" id="locationsMenu" aria-hidden="true">
+                <a class="menu-link" href="suche.html?dataset=empg_bohrungen">EMPG Bohrungen</a>
+                <a class="menu-link" href="suche.html?dataset=empg_schieber">EMPG Schieber</a>
+                <a class="menu-link" href="suche.html?dataset=gasunie_schieber">Gasunie Schieber</a>
+            </div>
+        </div>
+
+        <button type="button" class="btn" id="openExtraAddressesBtn">weitere Adressen</button>
         <button type="button" class="btn admin-launch" id="openAdmin">Adminbereich</button>
+    </div>
+
+    <div class="extra-addresses-modal" id="extraAddressesModal" aria-hidden="true">
+        <div class="extra-addresses-card">
+            <div class="admin-header">
+                <h3 class="admin-title">Weitere Adressen</h3>
+                <button type="button" class="admin-close" id="closeExtraAddressesBtn">Schließen</button>
+            </div>
+
+            <form class="extra-addresses-form" id="extraAddressesForm">
+                <div class="form-row">
+                    <label>
+                        <span>Thema</span>
+                        <select id="addressTheme" name="theme" required>
+                            <option value="Werkstatt">Werkstatt</option>
+                            <option value="Lager">Lager</option>
+                            <option value="Kundentermine">Kundentermine</option>
+                            <option value="Fremdplatz">Fremdplatz</option>
+                            <option value="Sonstiges">Sonstiges</option>
+                        </select>
+                    </label>
+                    <label>
+                        <span>Name / Bezeichnung</span>
+                        <input type="text" id="addressName" name="name" placeholder="z. B. Werk 3" required>
+                    </label>
+                </div>
+
+                <label>
+                    <span>Adresse</span>
+                    <input type="text" id="addressText" name="address" placeholder="Straße, Ort, Hausnummer" required>
+                </label>
+
+                <div class="form-row">
+                    <label>
+                        <span>Breitengrad</span>
+                        <input type="number" id="addressLat" name="lat" step="any" required>
+                    </label>
+                    <label>
+                        <span>Längengrad</span>
+                        <input type="number" id="addressLng" name="lng" step="any" required>
+                    </label>
+                </div>
+
+                <label>
+                    <span>Hinweis</span>
+                    <textarea id="addressNotes" name="notes" rows="3" placeholder="Kurzinfo oder Kontakt"></textarea>
+                </label>
+
+                <div id="addressStatus" class="address-status" role="status" aria-live="polite"></div>
+                <button type="submit" class="btn">Adresse speichern</button>
+            </form>
+
+            <div class="extra-addresses-list" id="extraAddressesList"></div>
+        </div>
     </div>
 
     <!-- Zurück zur Startseite Button -->
@@ -112,6 +173,21 @@
         const adminModal = document.getElementById("adminModal");
         const openAdminBtn = document.getElementById("openAdmin");
         const closeAdminBtn = document.getElementById("closeAdmin");
+        const toggleLocationsMenuBtn = document.getElementById("toggleLocationsMenu");
+        const locationsMenu = document.getElementById("locationsMenu");
+        const openExtraAddressesBtn = document.getElementById("openExtraAddressesBtn");
+        const extraAddressesModal = document.getElementById("extraAddressesModal");
+        const closeExtraAddressesBtn = document.getElementById("closeExtraAddressesBtn");
+        const extraAddressesForm = document.getElementById("extraAddressesForm");
+        const extraAddressesList = document.getElementById("extraAddressesList");
+        const addressTheme = document.getElementById("addressTheme");
+        const addressName = document.getElementById("addressName");
+        const addressText = document.getElementById("addressText");
+        const addressLat = document.getElementById("addressLat");
+        const addressLng = document.getElementById("addressLng");
+        const addressNotes = document.getElementById("addressNotes");
+        const addressStatus = document.getElementById("addressStatus");
+        const EXTRA_ADDRESSES_KEY = "bemtools_extra_addresses";
         const adminLoginBox = document.getElementById("adminLoginBox");
         const adminPanel = document.getElementById("adminPanel");
         const adminUser = document.getElementById("adminUser");
@@ -131,6 +207,116 @@
         let adminToken = localStorage.getItem(AUTH_TOKEN_KEY) || "";
         let adminAuthenticated = Boolean(adminToken);
         let selectedDataset = datasetSelect.value || "empg_bohrungen";
+        let extraAddresses = loadExtraAddresses();
+
+        function loadExtraAddresses() {
+            try {
+                const stored = JSON.parse(localStorage.getItem(EXTRA_ADDRESSES_KEY) || "[]");
+                return Array.isArray(stored) ? stored : [];
+            } catch (error) {
+                return [];
+            }
+        }
+
+        function saveExtraAddresses() {
+            localStorage.setItem(EXTRA_ADDRESSES_KEY, JSON.stringify(extraAddresses));
+        }
+
+        function renderExtraAddresses() {
+            if (!extraAddressesList) {
+                return;
+            }
+
+            if (!extraAddresses.length) {
+                extraAddressesList.innerHTML = '<p class="empty-state">Noch keine zusätzlichen Adressen gespeichert.</p>';
+                return;
+            }
+
+            const grouped = extraAddresses.reduce((accumulator, entry) => {
+                const theme = entry.theme || "Sonstiges";
+                if (!accumulator[theme]) {
+                    accumulator[theme] = [];
+                }
+                accumulator[theme].push(entry);
+                return accumulator;
+            }, {});
+
+            const themes = Object.keys(grouped).sort((left, right) => left.localeCompare(right));
+            extraAddressesList.innerHTML = "";
+
+            themes.forEach(theme => {
+                const section = document.createElement("section");
+                section.className = "address-group";
+                section.innerHTML = `<h4>${theme}</h4>`;
+
+                const items = grouped[theme]
+                    .slice()
+                    .sort((left, right) => left.name.localeCompare(right.name))
+                    .map(entry => `
+                        <div class="address-item">
+                            <strong>${entry.name}</strong><br>
+                            ${entry.address}<br>
+                            GPS: ${entry.lat}, ${entry.lng}
+                            ${entry.notes ? `<br><em>${entry.notes}</em>` : ""}
+                        </div>
+                    `)
+                    .join("");
+
+                section.insertAdjacentHTML("beforeend", items);
+                extraAddressesList.appendChild(section);
+            });
+        }
+
+        function openExtraAddressesModal() {
+            extraAddressesModal.classList.add("open");
+            extraAddressesModal.setAttribute("aria-hidden", "false");
+            renderExtraAddresses();
+        }
+
+        function closeExtraAddressesModal() {
+            extraAddressesModal.classList.remove("open");
+            extraAddressesModal.setAttribute("aria-hidden", "true");
+        }
+
+        function setAddressStatus(message, isError = false) {
+            if (!addressStatus) {
+                return;
+            }
+
+            addressStatus.textContent = message;
+            addressStatus.style.color = isError ? "#f7a7a7" : "#8edc92";
+        }
+
+        async function geocodeAddress(address) {
+            const query = address.trim();
+            if (!query) {
+                throw new Error("Bitte eine Adresse eingeben.");
+            }
+
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&q=${encodeURIComponent(query)}`,
+                {
+                    headers: {
+                        "Accept-Language": "de"
+                    }
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error("Geokodierung fehlgeschlagen.");
+            }
+
+            const data = await response.json();
+            if (!Array.isArray(data) || !data.length) {
+                throw new Error("Für diese Adresse konnten keine Koordinaten gefunden werden.");
+            }
+
+            const result = data[0];
+            return {
+                lat: Number.parseFloat(result.lat),
+                lng: Number.parseFloat(result.lon)
+            };
+        }
         let workingEntries = [];
         let loadedEntries = [];
 
@@ -423,6 +609,63 @@
 
             await loadDatasetForAdmin(datasetName);
         }
+
+        toggleLocationsMenuBtn.addEventListener("click", () => {
+            const isOpen = locationsMenu.classList.toggle("open");
+            locationsMenu.setAttribute("aria-hidden", isOpen ? "false" : "true");
+        });
+
+        document.addEventListener("click", event => {
+            if (!event.target.closest(".menu-stack")) {
+                locationsMenu.classList.remove("open");
+                locationsMenu.setAttribute("aria-hidden", "true");
+            }
+        });
+
+        openExtraAddressesBtn.addEventListener("click", openExtraAddressesModal);
+        closeExtraAddressesBtn.addEventListener("click", closeExtraAddressesModal);
+
+        extraAddressesModal.addEventListener("click", event => {
+            if (event.target === extraAddressesModal) {
+                closeExtraAddressesModal();
+            }
+        });
+
+        extraAddressesForm.addEventListener("submit", async event => {
+            event.preventDefault();
+
+            const theme = addressTheme.value.trim();
+            const name = addressName.value.trim();
+            const address = addressText.value.trim();
+            const notes = addressNotes.value.trim();
+
+            if (!theme || !name || !address) {
+                setAddressStatus("Bitte Thema, Name und Adresse ausfüllen.", true);
+                return;
+            }
+
+            setAddressStatus("Koordinaten werden ermittelt…", false);
+
+            try {
+                const coords = await geocodeAddress(address);
+                const lat = coords.lat;
+                const lng = coords.lng;
+
+                extraAddresses.push({ theme, name, address, lat, lng, notes });
+                saveExtraAddresses();
+                renderExtraAddresses();
+
+                addressLat.value = lat.toFixed(6);
+                addressLng.value = lng.toFixed(6);
+                setAddressStatus("Koordinaten wurden automatisch übernommen.", false);
+
+                extraAddressesForm.reset();
+                addressTheme.value = "Werkstatt";
+                addressName.focus();
+            } catch (error) {
+                setAddressStatus(error.message, true);
+            }
+        });
 
         openAdminBtn.addEventListener("click", openAdminModal);
         closeAdminBtn.addEventListener("click", closeAdminModal);

@@ -134,6 +134,142 @@ body.page-index h1 {
     max-width: 420px;
 }
 
+.menu-stack {
+    position: relative;
+}
+
+.menu-stack > .btn {
+    width: 100%;
+}
+
+.location-menu {
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid #2a2a2a;
+    background: rgba(10, 10, 10, 0.96);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+}
+
+.location-menu.open {
+    display: flex;
+}
+
+.menu-link {
+    display: block;
+    padding: 12px 14px;
+    border-radius: 10px;
+    text-decoration: none;
+    color: white;
+    background: linear-gradient(145deg, #1f1f1f, #0c0c0c);
+    border: 1px solid #2a2a2a;
+    transition: 0.2s ease;
+}
+
+.menu-link:hover {
+    border-color: #666;
+    transform: translateX(2px);
+}
+
+.extra-addresses-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.74);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1200;
+    padding: 16px;
+}
+
+.extra-addresses-modal.open {
+    display: flex;
+}
+
+.extra-addresses-card {
+    width: min(760px, 96vw);
+    max-height: 92vh;
+    overflow: auto;
+    border-radius: 14px;
+    border: 1px solid #2f2f2f;
+    background: #111;
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.55);
+    padding: 20px;
+}
+
+.extra-addresses-form {
+    display: grid;
+    gap: 12px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.extra-addresses-form label {
+    display: grid;
+    gap: 6px;
+    font-size: 0.95rem;
+    color: #d8d8d8;
+}
+
+.extra-addresses-form input,
+.extra-addresses-form select,
+.extra-addresses-form textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border-radius: 10px;
+    border: 1px solid #333;
+    background: #171717;
+    color: white;
+    padding: 10px 12px;
+    font: inherit;
+}
+
+.extra-addresses-form textarea {
+    resize: vertical;
+}
+
+.extra-addresses-list {
+    margin-top: 18px;
+    display: grid;
+    gap: 10px;
+}
+
+.address-group {
+    border-top: 1px solid #2a2a2a;
+    padding-top: 12px;
+}
+
+.address-group h4 {
+    margin: 0 0 8px 0;
+    color: #8edc92;
+}
+
+.address-item {
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #2a2a2a;
+    background: #171717;
+    line-height: 1.45;
+}
+
+.empty-state {
+    color: #8a8a8a;
+    font-style: italic;
+}
+
+.address-status {
+    min-height: 1.2em;
+    font-size: 0.95rem;
+    color: #8edc92;
+}
+
 .admin-launch {
     margin-top: 12px;
     background: linear-gradient(145deg, #1f2d18, #0e1609);
