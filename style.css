@@ -796,10 +796,37 @@ body.page-home {
     text-align: center;
     color: #666;
     font-size: 0.9rem;
+    cursor: pointer;
+    user-select: none;
 }
 
 .footer-text p {
     margin: 5px 0;
+}
+
+.footer-hint {
+    color: #8a8a8a;
+    font-size: 0.8rem;
+    margin-top: 10px;
+}
+
+.admin-home {
+    display: none;
+}
+
+.admin-home.open {
+    display: block;
+}
+
+.admin-module-grid {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.admin-module-btn {
+    min-width: 140px;
+    text-align: center;
 }
 
 @media (max-width: 768px) {
